@@ -28,9 +28,6 @@ class HelloApplication(Qt.QApplication):
         """ In this method, we're adding widgets and connecting signals from 
             these widgets to methods of our class, the so-called "slots" 
         """
-        #self.hellobutton = Qt.QPushButton("Say 'Hello world!'",None)
-        #self.connect(self.hellobutton, Qt.SIGNAL("clicked()"), self.slotSayHello)
-        #self.hellobutton.show()
         self.window = Qt.QWidget()
         self.window.setWindowTitle("Joe's Notes Viewer")
         self.layout = Qt.QBoxLayout(Qt.QBoxLayout.LeftToRight)
@@ -46,7 +43,6 @@ class HelloApplication(Qt.QApplication):
         Qt.QObject.connect(self.selector, Qt.SIGNAL("currentRowChanged(int)"), self.displayPage)
         
         self.view = Qt.QWebView()
-        #self.view.load(Qt.QUrl("http://qt.nokia.com/"))
         
         self.leftBar.addWidget(self.search)
         self.leftBar.addWidget(self.selector)
@@ -59,19 +55,13 @@ class HelloApplication(Qt.QApplication):
         """ In this method, we're getting a list of files in directory direct with
             file extension extension."""
         global html_files
-        print direct
-        print query+extension+"$$$$$$$$$$$$$$$"
         if time == 0:
             html_files = [direct+"/"+x for x in os.listdir(direct) if x.endswith(extension) and (self.queryCheck(self.isTextInSource(self.getSource(direct+"/"+x),query)) or query=="")]
-            print html_files
         else:
-            print "here"
             html_files += [direct+"/"+x for x in os.listdir(direct) if x.endswith(extension) and (self.queryCheck(self.isTextInSource(self.getSource(direct+"/"+x),query)) or query=="")]
             print html_files
         for x in os.listdir(direct):
-            print x
             if os.path.isdir(direct+"/"+x):
-                print x
                 self.listFiles(direct+"/"+x,".html",1,query)
                 break
         return html_files
@@ -87,6 +77,7 @@ class HelloApplication(Qt.QApplication):
             self.displayPage(-1)
 
     def resizeFont(self):
+        """ Makes the font size of the items int he list widget big."""
         for i in range(self.selector.count()):
             font = self.selector.item(i).font()
             font.setPointSize(16)
@@ -99,8 +90,6 @@ class HelloApplication(Qt.QApplication):
         return tempList
 
     def displayPage(self, fileNum):
-        #if not isinstance(fileNum, int):
-        #    fileNum = self.selector.row(fileNum)
         if fileNum==-1:
             self.window.setWindowTitle("Joe's Notes Viewer")
             self.view.load(Qt.QUrl("about:blank"))
@@ -109,24 +98,43 @@ class HelloApplication(Qt.QApplication):
             self.view.load(Qt.QUrl.fromLocalFile(self.fileList[fileNum]))
 
     def getResults(self, query):
-        print query+"************************"
         self.selector.clear()
         self.fileList = self.listFiles("/home/joseph/Desktop/markdown",".html",0,query)
         self.addFiles()
 
     def getSource(self, htmlFile):
-        print htmlFile
         sock = urllib.urlopen(htmlFile)
         source = sock.read()
         sock.close()
-        print source+"&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&"
         return source
 
     def isTextInSource(self, source, text):
-        text = text.lower()
+        text = str(text).lower()
         textStr = BeautifulSoup(source).findAll(text=True)
-        textStr = ', '.join(textStr)
-        return textStr.lower().find(text)
+        textStr = ''.join(textStr)
+        if self.isSimpleSearch(text):
+            text = text.strip().strip('\"')
+            return str(textStr).lower().find(text)
+        else:
+            return self.complexFind(str(textStr).lower(),text)
+
+    def isSimpleSearch(self, query):
+        """ The space character causes a search to not be simple. Surrounding the search with quotes forces the search to be simple."""
+        query = Qt.QString(query)
+        tempQuery = Qt.QString(query)
+        print tempQuery.compare(query.remove(Qt.QChar(' ')))
+        if tempQuery!=query.remove(Qt.QChar(' ')) and not (query.trimmed().startsWith(Qt.QChar('\"')) and query.trimmed().endsWith(Qt.QChar('\"'))):
+            return False
+        else:
+            return True
+
+    def complexFind(self, source, text):
+        """ If any word in the search text is not in the source of the html file, -1 is returned, otherwise, 0 is returned."""
+        textArray = text.split(' ')
+        for x in textArray:
+            if (not x in source):
+                return -1
+        return 0
 
     def queryCheck(self, num):
         if num==-1:
@@ -135,9 +143,9 @@ class HelloApplication(Qt.QApplication):
             return True
 
     def diagnostics(self):
+        """ For debugging perposes."""
         print self.selector.width()
         print self.window.width()
-        #print self.getSource(self.fileList[0])
 
 # Only actually do something if this script is run standalone, so we can test our 
 # application, but we're also able to import this program without actually running
