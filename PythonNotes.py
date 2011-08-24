@@ -36,7 +36,9 @@ class HelloApplication(Qt.QApplication):
         self.rightBar = Qt.QBoxLayout(Qt.QBoxLayout.TopToBottom)
 
         self.search = Qt.QLineEdit()
-        self.search.setPlaceholderText("Search")
+        self.search.setPlaceholderText("Type to Search")
+        self.searchShortcut = Qt.QShortcut(Qt.QKeySequence("ALT+S"), self.search)
+        Qt.QObject.connect(self.searchShortcut, Qt.SIGNAL("activated()"), self.search.setFocus)
         Qt.QObject.connect(self.search, Qt.SIGNAL("textEdited(const QString&)"), self.getResults)
         
         self.selector = Qt.QListWidget()
