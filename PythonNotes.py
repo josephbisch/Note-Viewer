@@ -33,6 +33,7 @@ class HelloApplication(Qt.QApplication):
         self.layout = Qt.QBoxLayout(Qt.QBoxLayout.LeftToRight)
 
         self.leftBar = Qt.QBoxLayout(Qt.QBoxLayout.TopToBottom)
+        self.rightBar = Qt.QBoxLayout(Qt.QBoxLayout.TopToBottom)
 
         self.search = Qt.QLineEdit()
         self.search.setPlaceholderText("Search")
@@ -41,13 +42,19 @@ class HelloApplication(Qt.QApplication):
         self.selector = Qt.QListWidget()
         self.selector.setMaximumWidth(170)
         Qt.QObject.connect(self.selector, Qt.SIGNAL("currentRowChanged(int)"), self.displayPage)
+
+        self.printButton = Qt.QPushButton("&Print")
+        self.printButton.setMaximumWidth(self.printButton.sizeHint().width())
+        Qt.QObject.connect(self.printButton, Qt.SIGNAL("clicked()"), self.printNote)
         
         self.view = Qt.QWebView()
         
         self.leftBar.addWidget(self.search)
         self.leftBar.addWidget(self.selector)
+        self.rightBar.addWidget(self.printButton, 1, Qt.Qt.AlignRight)
+        self.rightBar.addWidget(self.view, 2)
         self.layout.addLayout(self.leftBar)
-        self.layout.addWidget(self.view,1)
+        self.layout.addLayout(self.rightBar, 3)
         self.window.setLayout(self.layout)
         self.window.show()
 
@@ -141,6 +148,12 @@ class HelloApplication(Qt.QApplication):
             return False
         else:
             return True
+
+    def printNote(self):
+        printer = Qt.QPrinter()
+        printDialog = Qt.QPrintDialog()
+        if printDialog.exec_() == Qt.QDialog.Accepted:
+            self.view.print_(printer)
 
     def diagnostics(self):
         """ For debugging perposes."""
